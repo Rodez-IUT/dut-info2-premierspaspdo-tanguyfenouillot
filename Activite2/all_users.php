@@ -23,14 +23,14 @@
 		
 			/* initialisation des différentes variables du PDO */
 			$host = 'localhost';
-			$port = '8080';
+			$port = '3306';
 			$db   = 'my_activities';
 			$user = 'root';
 			$pass = 'root';
 			$charset = 'utf8';
 			
 			/* définition du PDO */
-			$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+			$dsn = "mysql:host=$host;dbname=$db;charset=$charset;port=$port";
 			
 			$options = [
 				PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
