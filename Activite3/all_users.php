@@ -44,9 +44,35 @@
 			} catch (PDOException $e) {
 				throw new PDOException($e->getMessage(), (int)$e->getCode());
 			}
-			
-			$stmt = $pdo->query('SELECT users.id as user_id, username, email, s.name FROM users JOIN status s ON users.status_id = s.id 
-								 WHERE username LIKE \'e%\' AND s.id = \'2\' ORDER BY username ASC');
+		?>
+		<form action="all_users.php" method="GET">
+			<div>Start with letter:
+				<input type="text" id="premiereLettre" name="premiereLettre" maxlength="1" size="10">
+				and status is:
+				<select id="status" name="status">
+					<option value="2">Active Account</option>
+					<option value="1">Waiting for account validation</option>
+				</select>
+				<input type="submit" value="OK">
+			</div>
+		</form>
+		
+		<?php
+		
+		$start_letter = "";
+		$status_id = 2;
+		
+		if (ISSET($_GET['value'])) {			
+			$status_id = $_GET['value'];
+		}
+
+		if (ISSET($_GET['premiereLettre'])) {
+			$start_letter = $_GET['premiereLettre'];
+		}
+		
+			$sql = "SELECT users.id as user_id, username, email, s.name FROM users JOIN status s ON users.status_id = s.id 
+					WHERE username LIKE '$start_letter%' AND s.id = '$status_id' ORDER BY username ASC";
+			$stmt = $pdo->query($sql);
 		?>
 		<table> 
 			<tr class="entete"> 
