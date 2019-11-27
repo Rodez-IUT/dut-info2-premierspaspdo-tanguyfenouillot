@@ -50,8 +50,8 @@
 				<input type="text" id="premiereLettre" name="premiereLettre" maxlength="1" size="10">
 				and status is:
 				<select id="status" name="status">
-					<option value="2">Active Account</option>
-					<option value="1">Waiting for account validation</option>
+					<option value="2"<?php if ("status_id" == 2) echo ' selected' ?>>Active Account</option>
+					<option value="1"<?php if ("status_id" == 1) echo ' selected' ?>>Waiting for account validation</option>
 				</select>
 				<input type="submit" value="OK">
 			</div>
@@ -62,16 +62,16 @@
 		$start_letter = "";
 		$status_id = 2;
 		
-		if (ISSET($_GET['value'])) {			
-			$status_id = $_GET['value'];
+		if (ISSET($_GET['status']) && $_GET['status'] == 1) {			
+			$status_id = 1;
 		}
-
+		
 		if (ISSET($_GET['premiereLettre'])) {
 			$start_letter = $_GET['premiereLettre'];
 		}
 		
 			$sql = "SELECT users.id as user_id, username, email, s.name FROM users JOIN status s ON users.status_id = s.id 
-					WHERE username LIKE '$start_letter%' AND s.id = '$status_id' ORDER BY username ASC";
+					WHERE username LIKE '$start_letter%' AND s.id = $status_id ORDER BY username ASC";
 			$stmt = $pdo->query($sql);
 		?>
 		<table> 
