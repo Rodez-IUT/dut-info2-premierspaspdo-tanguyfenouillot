@@ -50,8 +50,9 @@
 				<input type="text" id="premiereLettre" name="premiereLettre" size="10">
 				and status is:
 				<select id="status" name="status">
-					<option value="2"<?php if ("status_id" == 2) echo ' selected' ?>>Active Account</option>
-					<option value="1"<?php if ("status_id" == 1) echo ' selected' ?>>Waiting for account validation</option>
+					<option value="2"<?php if ($_GET['status'] == 2) echo ' selected' ?>>Active Account</option>
+					<option value="1"<?php if ($_GET['status'] == 1) echo ' selected' ?>>Waiting for account validation</option>
+					<option value="3"<?php if ($_GET['status'] == 3) echo ' selected' ?>>Waiting for account deletion</option>
 				</select>
 				<input type="submit" value="OK">
 			</div>
@@ -64,6 +65,8 @@
 			
 			if (ISSET($_GET['status']) && $_GET['status'] == 1) {			
 				$status_id = 1;
+			} else if (ISSET($_GET['status']) && $_GET['status'] == 3) {
+				$status_id = 3;
 			}
 			
 			if (ISSET($_GET['premiereLettre'])) {
