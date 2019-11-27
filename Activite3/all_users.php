@@ -89,7 +89,11 @@
 			</tr>
 		<?php
 			while ($row = $stmt->fetch()) {
-				echo "<tr> <td>" . $row['user_id'] . "</td><td>" .$row['username'] . "</td><td>" . $row['email'] . "</td><td>" . $row['name'] . "</td></tr>";
+				echo "<tr> <td>" . $row['user_id'] . "</td><td>" .$row['username'] . "</td><td>" . $row['email'] . "</td><td>" . $row['name'] . "</td>";
+				if ($status_id != 3) {
+					echo "<td><a href=\"all_users.php?premiereLettre=&status=3&action=askDeletion\">Ask deletion</a></td>";
+				}
+				echo "</tr>";
 			}
 		?>
 		</table>
