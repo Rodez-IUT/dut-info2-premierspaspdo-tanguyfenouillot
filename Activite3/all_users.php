@@ -47,7 +47,7 @@
 		?>
 		<form action="all_users.php" method="GET">
 			<div>Start with letter:
-				<input type="text" id="premiereLettre" name="premiereLettre" maxlength="1" size="10">
+				<input type="text" id="premiereLettre" name="premiereLettre" size="10">
 				and status is:
 				<select id="status" name="status">
 					<option value="2"<?php if ("status_id" == 2) echo ' selected' ?>>Active Account</option>
