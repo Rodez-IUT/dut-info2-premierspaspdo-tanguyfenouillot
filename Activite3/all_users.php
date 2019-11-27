@@ -59,20 +59,23 @@
 		
 		<?php
 		
-		$start_letter = "";
-		$status_id = 2;
+			$start_letter = "";
+			$status_id = 2;
+			
+			if (ISSET($_GET['status']) && $_GET['status'] == 1) {			
+				$status_id = 1;
+			}
+			
+			if (ISSET($_GET['premiereLettre'])) {
+				$start_letter = $_GET['premiereLettre'];
+				$start_letter = $start_letter."%";
+			}
 		
-		if (ISSET($_GET['status']) && $_GET['status'] == 1) {			
-			$status_id = 1;
-		}
-		
-		if (ISSET($_GET['premiereLettre'])) {
-			$start_letter = $_GET['premiereLettre'];
-		}
-		
-			$sql = "SELECT users.id as user_id, username, email, s.name FROM users JOIN status s ON users.status_id = s.id 
-					WHERE username LIKE '$start_letter%' AND s.id = $status_id ORDER BY username ASC";
-			$stmt = $pdo->query($sql);
+			$stmt = $pdo->prepare("SELECT users.id as user_id, username, email, s.name FROM users JOIN status s ON users.status_id = s.id 
+					WHERE username LIKE :start_letter AND s.id = :status_id ORDER BY username ASC");
+			$stmt->execute(['start_letter' => $start_letter, 'status_id' => $status_id]);
+
+					
 		?>
 		<table> 
 			<tr class="entete"> 
