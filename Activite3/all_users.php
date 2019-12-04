@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html>
-	<head>
-	<meta charset="utf-8">
-	<title>All users</title>
-	<href link="/presentation/style.css" rel="stylesheet">
-	 <style>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All users</title>
+    <style>
         table {
             border-collapse: collapse;
             width: 100%;
@@ -15,87 +14,104 @@
             border-bottom: 1px solid #ddd;
         }
     </style>
-	</head>
-	<body>
-		<h1> All users </h1>
-		
-		<?php
-		
-			/* initialisation des différentes variables du PDO */
-			$host = 'localhost';
-			$port = '3306';
-			$db   = 'my_activities';
-			$user = 'root';
-			$pass = 'root';
-			$charset = 'utf8';
-			
-			/* définition du PDO */
-			$dsn = "mysql:host=$host;dbname=$db;charset=$charset;port=$port";
-			
-			$options = [
-				PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-				PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-				PDO::ATTR_EMULATE_PREPARES   => false,
-			];
-			
-			try {
-				/* création de l'accès à la BD */
-				$pdo = new PDO($dsn, $user, $pass, $options);
-			} catch (PDOException $e) {
-				throw new PDOException($e->getMessage(), (int)$e->getCode());
-			}
-		?>
-		<form action="all_users.php" method="GET">
-			<div>Start with letter:
-				<input type="text" id="premiereLettre" name="premiereLettre" size="10">
-				and status is:
-				<select id="status" name="status">
-					<option value="2"<?php if ($_GET['status'] == 2) echo ' selected' ?>>Active Account</option>
-					<option value="1"<?php if ($_GET['status'] == 1) echo ' selected' ?>>Waiting for account validation</option>
-					<option value="3"<?php if ($_GET['status'] == 3) echo ' selected' ?>>Waiting for account deletion</option>
-				</select>
-				<input type="submit" value="OK">
-			</div>
-		</form>
-		
-		<?php
-		
-			$start_letter = "";
-			$status_id = 2;
-			
-			if (ISSET($_GET['status']) && $_GET['status'] == 1) {			
-				$status_id = 1;
-			} else if (ISSET($_GET['status']) && $_GET['status'] == 3) {
-				$status_id = 3;
-			}
-			
-			if (ISSET($_GET['premiereLettre'])) {
-				$start_letter = $_GET['premiereLettre'];
-				$start_letter = $start_letter."%";
-			}
-		
-			$stmt = $pdo->prepare("SELECT users.id as user_id, username, email, s.name FROM users JOIN status s ON users.status_id = s.id 
-					WHERE username LIKE :start_letter AND s.id = :status_id ORDER BY username ASC");
-			$stmt->execute(['start_letter' => $start_letter, 'status_id' => $status_id]);
+</head>
+<body>
 
-					
-		?>
-		<table> 
-			<tr class="entete"> 
-				<th>Id</th> 
-				<th>Username</th> 
-				<th>Email</th> 
-				<th>Status</th> 
-			</tr>
-		<?php
-			while ($row = $stmt->fetch()) {
-				echo "<tr> <td>" . $row['user_id'] . "</td><td>" .$row['username'] . "</td><td>" . $row['email'] . "</td><td>" . $row['name'] . "</td>";
-				if ($status_id != 3) {
-					echo "<td><a href=\"all_users.php?premiereLettre=&status=3&action=askDeletion\">Ask deletion</a></td>";
-				}
-				echo "</tr>";
-			}
-		?>
-		</table>
-	</body>
+<?php
+// Connexion to the database
+$host = 'localhost';
+$db = 'my_activities';
+$user = 'root';
+$pass = 'root';
+$charset = 'utf8mb4';
+$dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+$options = [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES => false
+];
+try {
+    $pdo = new PDO($dsn, $user, $pass, $options);
+} catch (PDOException $e) {
+    echo $e->getMessage();
+    throw new PDOException($e->getMessage(), (int)$e->getCode());
+}
+function get($name) {
+    return isset($_GET[$name]) ? $_GET[$name] : null;
+}
+// set action to trigger
+$action = get('action') ?: 'searchUsers';
+$searchStmt = null;
+// trigger the appropriate action
+$action($pdo);
+function searchUsers($pdo){
+    global $searchStmt;
+    $status_id = (int)get('status_id') ?: 2;
+    $start_letter = htmlspecialchars(get('start_letter') . '%') ?: '%';
+    $sql = "select users.id as user_id, username, email, s.name as status, s.id as status_id 
+            from users join status s on users.status_id = s.id 
+            where username like :start_letter and status_id = :status_id order by username";
+    $searchStmt = $pdo->prepare($sql);
+    $searchStmt->execute(['start_letter' => $start_letter, 'status_id' => $status_id]);
+}
+function askDeletion($pdo){
+    $user_id = (int)get("user_id");
+    // insert log
+    $sql2 = "insert into action_log (action_date, action_name, user_id) 
+              values (CURRENT_TIME(),'askDeletion',?)";
+    $stmt2 = $pdo->prepare($sql2);
+    $stmt2->execute([$user_id]);
+    // update user
+    //throw new Exception("erreur !");
+    $sql1 = "update users set status_id = 3 where id = ?";
+    $stmt1 = $pdo->prepare($sql1);
+    $stmt1->execute([$user_id]);
+    // update user list
+    searchUsers($pdo);
+}
+?>
+
+
+<h1>All Users</h1>
+
+<form action="all_users.php" method="get">
+    <input hidden name="action" value="searchUsers">
+    Start with letter:
+    <input name="start_letter" type="text" value="<?php echo get("start_letter") ?>">
+    and status is:
+    <select name="status_id">
+        <option value="1" <?php if (get('status_id') == 1) echo 'selected' ?>>Waiting for account validation</option>
+        <option value="2" <?php if (get('status_id') == 2) echo 'selected' ?>>Active account</option>
+        <option value="3" <?php if (get('status_id') == 3) echo 'selected' ?>>Waiting for account deletion</option>
+    </select>
+    <input type="submit" value="OK">
+</form>
+
+
+<table>
+    <tr>
+        <th>Id</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Status</th>
+        <th></th>
+    </tr>
+    <?php while ($row = $searchStmt->fetch()) { ?>
+        <tr>
+            <td><?php echo $row['user_id'] ?></td>
+            <td><?php echo $row['username'] ?></td>
+            <td><?php echo $row['email'] ?></td>
+            <td><?php echo $row['status'] ?></td>
+            <td>
+                <?php if ($row['status_id'] != 3) { ?>
+                    <a href="all_users.php?status_id=3&user_id=<?php echo $row['user_id'] ?>&action=askDeletion">Ask
+                        deletion</a>
+                <?php } ?>
+            </td>
+        </tr>
+    <?php } ?>
+</table>
+
+
+</body>
 </html>
